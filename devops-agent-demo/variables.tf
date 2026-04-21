@@ -25,5 +25,5 @@ variable "costcenter" {
 variable "repo" {
   description = "GitHub repo name for tagging"
   type        = string
-  default     = "ai-config"
+  default     = "aws-ai-frontier-agents"
 }

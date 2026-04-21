@@ -7,11 +7,11 @@ variable "env" {
 variable "project" {
   description = "Project name used in resource naming"
   type        = string
-  default     = "security-agent"
+  default     = "kiro-agent"
 }
 
 variable "aws_region" {
-  description = "AWS region - must be us-east-1 for Security Agent"
+  description = "AWS region for deployment"
   type        = string
   default     = "us-east-1"
 }
@@ -26,14 +26,4 @@ variable "repo" {
   description = "GitHub repo name for tagging"
   type        = string
   default     = "aws-ai-frontier-agents"
-}
-
-variable "hosted_zone_name" {
-  description = "Route 53 hosted zone name (e.g., example.com). ACM cert must exist for this domain."
-  type        = string
-}
-
-variable "domain_name" {
-  description = "Subdomain for the API (e.g., securitydemo.example.com)"
-  type        = string
 }

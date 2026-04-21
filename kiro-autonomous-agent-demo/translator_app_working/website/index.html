@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ye Olde Translator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Georgia', serif; background: #1a1a2e; color: #e0d5c1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem; }
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #d4a574; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .subtitle { font-style: italic; margin-bottom: 2rem; color: #a89070; }
+        .container { max-width: 700px; width: 100%; }
+        .card { background: #16213e; border: 1px solid #0f3460; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; }
+        textarea { width: 100%; height: 120px; background: #0f3460; border: 1px solid #533483; border-radius: 8px; color: #e0d5c1; padding: 1rem; font-family: inherit; font-size: 1rem; resize: vertical; }
+        textarea:focus { outline: none; border-color: #d4a574; }
+        button { background: #533483; color: #e0d5c1; border: none; padding: 0.8rem 2rem; border-radius: 8px; font-size: 1.1rem; cursor: pointer; margin-top: 1rem; font-family: inherit; transition: background 0.2s; }
+        button:hover { background: #6a4c93; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result { margin-top: 1.5rem; padding: 1.5rem; background: #0f3460; border-radius: 8px; border-left: 4px solid #d4a574; display: none; }
+        .result.show { display: block; }
+        .result p { line-height: 1.6; font-size: 1.1rem; }
+        .result .label { font-size: 0.85rem; color: #a89070; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+        .history { margin-top: 2rem; }
+        .history h2 { color: #d4a574; margin-bottom: 1rem; font-size: 1.3rem; }
+        .history-item { padding: 1rem; background: #0f3460; border-radius: 8px; margin-bottom: 0.75rem; }
+        .history-item .original { color: #a89070; font-size: 0.9rem; }
+        .history-item .translated { color: #e0d5c1; margin-top: 0.3rem; }
+        .spinner { display: none; margin-top: 1rem; text-align: center; color: #d4a574; }
+        .spinner.show { display: block; }
+        .powered-by { margin-top: 2rem; font-size: 0.8rem; color: #555; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#x1f4dc; Ye Olde Translator</h1>
+        <p class="subtitle">Transmute thy modern tongue into the speech of ages past</p>
+
+        <div class="card">
+            <textarea id="inputText" placeholder="Enter modern English text here..."></textarea>
+            <button id="translateBtn" onclick="doTranslate()">Translate to Old English</button>
+            <div class="spinner" id="spinner">&#x23f3; Translating thy words...</div>
+            <div class="result" id="result">
+                <div class="label">In the tongue of old:</div>
+                <p id="translatedText"></p>
+            </div>
+        </div>
+
+        <div class="history" id="historySection" style="display:none;">
+            <h2>&#x1f4d6; Translation History</h2>
+            <div id="historyList"></div>
+        </div>
+
+        <div class="powered-by">
+            Powered by Amazon Bedrock &bull; Built with Kiro
+        </div>
+    </div>
+
+    <script>
+        // API_URL will be replaced during deployment
+        const API_URL = '{{API_URL}}';
+
+        async function doTranslate() {
+            const text = document.getElementById('inputText').value.trim();
+            if (!text) return;
+
+            const btn = document.getElementById('translateBtn');
+            const spinner = document.getElementById('spinner');
+            const result = document.getElementById('result');
+
+            btn.disabled = true;
+            spinner.classList.add('show');
+            result.classList.remove('show');
+
+            try {
+                const resp = await fetch(`${API_URL}/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text }),
+                });
+                const data = await resp.json();
+                document.getElementById('translatedText').textContent = data.translated;
+                result.classList.add('show');
+                loadHistory();
+            } catch (e) {
+                document.getElementById('translatedText').textContent = 'Alas, an error hath occurred!';
+                result.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                spinner.classList.remove('show');
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const resp = await fetch(`${API_URL}/history`);
+                const data = await resp.json();
+                const list = document.getElementById('historyList');
+                const section = document.getElementById('historySection');
+
+                if (data.translations && data.translations.length > 0) {
+                    section.style.display = 'block';
+                    list.innerHTML = data.translations.map(t => `
+                        <div class="history-item">
+                            <div class="original">${t.originalText}</div>
+                            <div class="translated">${t.translatedText}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { /* silent */ }
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>
